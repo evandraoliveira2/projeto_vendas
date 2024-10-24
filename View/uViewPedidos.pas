@@ -58,6 +58,9 @@ type
     dsPedidosProdutos: TDataSource;
     cdsPedidosProdutos: TClientDataSet;
     btnCancelar: TBitBtn;
+    btnEditarPedido: TToolButton;
+    ToolButton1: TToolButton;
+    btnExcluirPedido: TToolButton;
     procedure btnPesqClienteClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure edtCodigo_ClienteKeyPress(Sender: TObject; var Key: Char);
@@ -79,6 +82,8 @@ type
     procedure btnCancelarClick(Sender: TObject);
     procedure gridPedidosProdutosKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure btnEditarPedidoClick(Sender: TObject);
+    procedure btnExcluirPedidoClick(Sender: TObject);
   private
     FModoPedidos: TModo;
     FModoPedidosProdutos: TModo;
@@ -89,8 +94,7 @@ type
     procedure ControleBotoes(Opcao:Integer);
     procedure LimparPedidos;
     procedure LimparPedidosProdutos;
-    procedure GravarPedidosProdutos(Numero_Pedido: Integer);
-    procedure GravarPedidos;
+    function GravarPedidos: boolean;
     procedure PopularEntityPedidos(AEntityPedidos: TEntityPedidos);
     procedure PopularEntityPedidosProdutos(AEntityPedidosProdutos: TEntityPedidosProdutos);
     procedure AlterarPedidoProduto;
@@ -120,7 +124,7 @@ var
   MsgError: string;
 begin
   if (edtCodigo_Cliente.Text <> '') and (StrToInt(edtCodigo_Cliente.Text) > 0) then
-    ControleBotoes(4)
+    ControleBotoes(5)
   else
   begin
     edtNome_Cliente.Text := '';
@@ -133,7 +137,7 @@ begin
 
     LimparPedidosProdutos;
 
-    ControleBotoes(5);
+    ControleBotoes(6);
   end;
 end;
 
@@ -277,6 +281,33 @@ begin
   ControleBotoes(1);
 end;
 
+procedure TViewPedidos.btnEditarPedidoClick(Sender: TObject);
+begin
+  FModoPedidos := tm_Edit;
+  ControleBotoes(3);
+  edtCodigo_Cliente.SetFocus;
+end;
+
+procedure TViewPedidos.btnExcluirPedidoClick(Sender: TObject);
+var
+  MsgError: string;
+begin
+  if MessageDlg('Confirma a exclusão do pedido e todos os seus produtos?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if not FControllerPedidos.Delete(StrToInt(edtNumero_Pedido.Text), MsgError) then
+    begin
+      MessageDlg(MsgError, mtInformation, [mbOk], 0);
+      Exit;
+    end;
+
+    MessageDlg('Pedido excluído com sucesso.', mtInformation, [mbYes], 0);
+
+    LimparPedidos;
+    LimparPedidosProdutos;
+    ControleBotoes(1);
+  end;
+end;
+
 procedure TViewPedidos.btnInserirPedidoClick(Sender: TObject);
 begin
   LimparPedidos;
@@ -363,7 +394,8 @@ begin
     Exit;
   end;
 
-  GravarPedidos;
+  if GravarPedidos then
+    MessageDlg('Pedido gravado com sucesso.', mtInformation, [mbOk], 0);
 
   ControleBotoes(1);
 end;
@@ -433,8 +465,7 @@ begin
 
       FModoPedidos := tm_Edit;
       TUtils.AjustarColunas(gridPedidosProdutos);
-      ControleBotoes(3);
-      edtCodigo_Cliente.SetFocus;
+      ControleBotoes(4);
     end;
   finally
     FreeAndNil(FListaPedidosProdutos);
@@ -463,10 +494,12 @@ var
   MsgError: string;
 begin
   case Opcao of
-  1: begin //OnShow Cancelar ou Salvar
+  1: begin //OnShow, Cancelar, Salvar ou Excluir
        btnPesquisar.Visible := true;
        separator1.Visible := true;
        btnInserirPedido.Enabled := true;
+       btnEditarPedido.Enabled := false;
+       btnExcluirPedido.Enabled := false;
        pnlGeral.Enabled := false;
        btnCancelar.Enabled := false;
        btnSalvar.Enabled := false;
@@ -480,10 +513,12 @@ begin
          Exit;
        end;
      end;
-  2: begin //Pesquisar ou Alterar ou Inserir
+  2: begin //Inserir
        btnPesquisar.Visible := false;
        separator1.Visible := false;
        btnInserirPedido.Enabled := false;
+       btnEditarPedido.Enabled := false;
+       btnExcluirPedido.Enabled := false;
        pnlGeral.Enabled := true;
        btnCancelar.Enabled := true;
        btnSalvar.Enabled := true;
@@ -497,29 +532,48 @@ begin
          Exit;
        end;
      end;
-  3: begin //Pesquisar
+  3: begin //Editar
        btnPesquisar.Visible := false;
        separator1.Visible := false;
        btnInserirPedido.Enabled := false;
+       btnEditarPedido.Enabled := false;
+       btnExcluirPedido.Enabled := false;
        pnlGeral.Enabled := true;
        btnCancelar.Enabled := true;
        btnSalvar.Enabled := true;
      end;
-  4: begin
-       pnlPedidosProdutos.Enabled := true;
+  4: begin //Pesquisar
+       btnPesquisar.Visible := true;
+       separator1.Visible := true;
+       btnInserirPedido.Enabled := true;
+       btnEditarPedido.Enabled := true;
+       btnExcluirPedido.Enabled := true;
+       pnlGeral.Enabled := false;
+       btnCancelar.Enabled := false;
+       btnSalvar.Enabled := false;
      end;
   5: begin
+       pnlPedidosProdutos.Enabled := true;
+     end;
+  6: begin
        pnlPedidosProdutos.Enabled := false;
      end;
   end;
 end;
 
-procedure TViewPedidos.GravarPedidos;
+function TViewPedidos.GravarPedidos: boolean;
 var
   FEntityPedidos: TEntityPedidos;
+  FListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>;
+  FEntityPedidosProdutos: TEntityPedidosProdutos;
   MsgError: string;
 begin
+  Result := true;
+
   FEntityPedidos := TEntityPedidos.Create;
+  FListaPedidosProdutos := TObjectList<TEntityPedidosProdutos>.Create(true);
+
+  cdsPedidosProdutos.DisableControls;
 
   try
     PopularEntityPedidos(FEntityPedidos);
@@ -530,6 +584,7 @@ begin
 
       if FEntityPedidos.Numero = 0 then
       begin
+        Result := false;
         MessageDlg(MsgError, mtError, [mbOk], 0);
         Exit;
       end
@@ -540,36 +595,18 @@ begin
 
       if not FControllerPedidos.Update(FEntityPedidos, MsgError) then
       begin
+        Result := false;
         MessageDlg(MsgError, mtError, [mbOk], 0);
         Exit;
       end
     end;
-
-    GravarPedidosProdutos(FEntityPedidos.Numero);
-  finally
-    FreeAndNil(FEntityPedidos);
-  end;
-end;
-
-procedure TViewPedidos.GravarPedidosProdutos(Numero_Pedido: Integer);
-var
-  FListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>;
-  FEntityPedidosProdutos: TEntityPedidosProdutos;
-  FControllerPedidosProdutos: TControllerPedidosProdutos;
-  MsgError: string;
-begin
-  FListaPedidosProdutos := TObjectList<TEntityPedidosProdutos>.Create(true);
-  FControllerPedidosProdutos := TControllerPedidosProdutos.Create;
-
-  try
-    cdsPedidosProdutos.DisableControls;
 
     cdsPedidosProdutos.First;
 
     while not cdsPedidosProdutos.Eof do
     begin
       FEntityPedidosProdutos := TEntityPedidosProdutos.Create;
-      FEntityPedidosProdutos.Numero_Pedido := Numero_Pedido;
+      FEntityPedidosProdutos.Numero_Pedido := FEntityPedidos.Numero;
       FEntityPedidosProdutos.Codigo_Produto := cdsPedidosProdutos.FieldByName('CODIGO_PRODUTO').AsInteger;
       FEntityPedidosProdutos.Quantidade := cdsPedidosProdutos.FieldByName('QUANTIDADE').AsInteger;
       FEntityPedidosProdutos.Valor_Unitario := cdsPedidosProdutos.FieldByName('VALOR_UNITARIO').AsFloat;
@@ -579,21 +616,24 @@ begin
       cdsPedidosProdutos.Next;
     end;
 
-    if not FControllerPedidosProdutos.Delete(Numero_Pedido, MsgError) then
+    if not FControllerPedidosProdutos.Delete(FEntityPedidos.Numero, MsgError) then
     begin
+      Result := false;
       MessageDlg(MsgError, mtError, [mbOk], 0);
       Exit;
     end;
 
     if not FControllerPedidosProdutos.Insert(FListaPedidosProdutos, MsgError) then
     begin
+      Result := false;
       MessageDlg(MsgError, mtError, [mbOk], 0);
       Exit;
     end;
   finally
-    FreeAndNil(FListaPedidosProdutos);
     cdsPedidosProdutos.First;
     cdsPedidosProdutos.EnableControls;
+    FreeAndNil(FEntityPedidos);
+    FreeAndNil(FListaPedidosProdutos);
   end;
 end;
 

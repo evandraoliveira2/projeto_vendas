@@ -180,7 +180,15 @@ begin
       TControllerConexao.getInstance().daoConexao.getConexao.StartTransaction;
 
       Sql := '';
-      Sql := 'Delete PEDIDOS where NUMERO = :NUMERO';
+      Sql := 'Delete from PEDIDOS_PRODUTOS where NUMERO_PEDIDO = :NUMERO_PEDIDO';
+
+      FFDQuery.Sql.Clear;
+      FFDQuery.Sql.Add(Sql);
+      FFDQuery.ParamByName('NUMERO_PEDIDO').AsInteger := Numero;
+      FFDQuery.ExecSql;
+
+      Sql := '';
+      Sql := 'Delete from PEDIDOS where NUMERO = :NUMERO';
 
       FFDQuery.Sql.Clear;
       FFDQuery.Sql.Add(Sql);
