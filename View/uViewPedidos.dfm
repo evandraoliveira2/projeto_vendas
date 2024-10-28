@@ -385,6 +385,7 @@ object ViewPedidos: TViewPedidos
           TitleFont.Height = -12
           TitleFont.Name = 'Segoe UI'
           TitleFont.Style = []
+          OnDrawColumnCell = gridPedidosProdutosDrawColumnCell
           OnKeyDown = gridPedidosProdutosKeyDown
           OnKeyPress = gridPedidosProdutosKeyPress
         end

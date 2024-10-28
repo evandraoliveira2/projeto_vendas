@@ -48,7 +48,7 @@ begin
     AcdsPesqPedidos.Fields.FindField('DATA_EMISSAO').DisplayLabel := 'Data Emissão';
     AcdsPesqPedidos.Fields.FindField('CODIGO_CLIENTE').DisplayLabel := 'Código Cliente';
     AcdsPesqPedidos.Fields.FindField('NOME_CLIENTE').DisplayLabel := 'Nome Cliente';
-    AcdsPesqPedidos.Fields.FindField('VALOR_TOTAL').DisplayLabel := 'Valor Total';
+    AcdsPesqPedidos.Fields.FindField('VALOR_TOTAL').DisplayLabel := 'Valor Total R$';
   except on E: Exception do
     begin
       MsgError := 'Erro ao criar tabela de pesquisa de Pedidos: ' + E.Message;

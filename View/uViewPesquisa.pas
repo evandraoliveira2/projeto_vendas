@@ -25,6 +25,8 @@ type
     procedure edtCodigoKeyPress(Sender: TObject; var Key: Char);
     procedure edtDescricaoKeyPress(Sender: TObject; var Key: Char);
     procedure gridPesquisaKeyPress(Sender: TObject; var Key: Char);
+    procedure gridPesquisaDrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: Integer; Column: TColumn; State: TGridDrawState);
   private
     { Private declarations }
     FCodigo: Integer;
@@ -98,6 +100,13 @@ begin
     ModalResult := mrNo
   else
     Selecionar;
+end;
+
+procedure TViewPesquisa.gridPesquisaDrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+begin
+  if (TDBGrid(Sender).DataSource.DataSet.RecordCount > 0) and (Column.Field.DataType = ftFloat) then
+    TDBGrid(Sender).Canvas.TextRect(Rect, Rect.Left + 2, Rect.Top + 2, FormatFloat('###,###,##0.00', Column.Field.AsFloat));
 end;
 
 procedure TViewPesquisa.gridPesquisaKeyPress(Sender: TObject; var Key: Char);

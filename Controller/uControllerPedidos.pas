@@ -7,6 +7,7 @@ uses
   Datasnap.DBClient,
   System.Generics.Collections,
   uEntityPedidos,
+  uEntityPedidosProdutos,
   uDAOPedidos;
 type
   TControllerPedidos = class
@@ -16,8 +17,9 @@ type
     destructor Destroy;
 
     function Select(AEntityPedidosParam: TEntityPedidos; AListaPedidos: TObjectList<TEntityPedidos>; var MsgError: string): boolean;
-    function Insert(AEntityPedidosParam: TEntityPedidos; var MsgError: string): Integer;
-    function Update(AEntityPedidosParam: TEntityPedidos; var MsgError: string): boolean;
+    function SelectPedidosProdutos(Numero_Pedido: Integer; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): boolean;
+    function Insert(AEntityPedidosParam: TEntityPedidos; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): Integer;
+    function Update(AEntityPedidosParam: TEntityPedidos; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): boolean;
     function Delete(Numero: Integer; var MsgError: string): boolean;
 
   end;
@@ -49,27 +51,40 @@ begin
   end;
 end;
 
-function TControllerPedidos.Insert(AEntityPedidosParam: TEntityPedidos; var MsgError: string): Integer;
+function TControllerPedidos.SelectPedidosProdutos(Numero_Pedido: Integer; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): boolean;
 var
   FDAOPedidos: TDAOPedidos;
 begin
   FDAOPedidos := TDAOPedidos.Create;
 
   try
-    Result := FDAOPedidos.Insert(AEntityPedidosParam, MsgError);
+    Result := FDAOPedidos.SelectPedidosProdutos(Numero_Pedido, AListaPedidosProdutos, MsgError);
   finally
     FreeAndNil(FDAOPedidos);
   end;
 end;
 
-function TControllerPedidos.Update(AEntityPedidosParam: TEntityPedidos; var MsgError: string): boolean;
+function TControllerPedidos.Insert(AEntityPedidosParam: TEntityPedidos; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): Integer;
 var
   FDAOPedidos: TDAOPedidos;
 begin
   FDAOPedidos := TDAOPedidos.Create;
 
   try
-    Result := FDAOPedidos.Update(AEntityPedidosParam, MsgError);
+    Result := FDAOPedidos.Insert(AEntityPedidosParam, AListaPedidosProdutos, MsgError);
+  finally
+    FreeAndNil(FDAOPedidos);
+  end;
+end;
+
+function TControllerPedidos.Update(AEntityPedidosParam: TEntityPedidos; AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>; var MsgError: string): boolean;
+var
+  FDAOPedidos: TDAOPedidos;
+begin
+  FDAOPedidos := TDAOPedidos.Create;
+
+  try
+    Result := FDAOPedidos.Update(AEntityPedidosParam, AListaPedidosProdutos, MsgError);
   finally
     FreeAndNil(FDAOPedidos);
   end;

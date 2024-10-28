@@ -44,7 +44,7 @@ begin
     AcdsPesqProdutos.IndexFieldNames := 'CODIGO';
     AcdsPesqProdutos.Fields.FindField('CODIGO').DisplayLabel := 'Código';
     AcdsPesqProdutos.Fields.FindField('DESCRICAO').DisplayLabel := 'Descrição';
-    AcdsPesqProdutos.Fields.FindField('VALOR_UNITARIO').DisplayLabel := 'Valor Unitário';
+    AcdsPesqProdutos.Fields.FindField('VALOR_UNITARIO').DisplayLabel := 'Valor Unitário R$';
   except on E: Exception do
     begin
       MsgError := 'Erro ao criar tabela de pesquisa de produtos: ' + E.Message;

@@ -87,6 +87,7 @@ object ViewPesquisa: TViewPesquisa
     TitleFont.Height = -12
     TitleFont.Name = 'Segoe UI'
     TitleFont.Style = []
+    OnDrawColumnCell = gridPesquisaDrawColumnCell
     OnDblClick = gridPesquisaDblClick
     OnKeyPress = gridPesquisaKeyPress
   end

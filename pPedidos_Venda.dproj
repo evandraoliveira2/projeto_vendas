@@ -159,7 +159,6 @@
         </DCCReference>
         <DCCReference Include="Model\uMODELPedidos.pas"/>
         <DCCReference Include="Model\uMODELPedidosProdutos.pas"/>
-        <DCCReference Include="Controller\uControllerPedidosProdutos.pas"/>
         <DCCReference Include="Entity\uEntityPedidosProdutos.pas"/>
         <DCCReference Include="Model\uMODELPesquisaProdutos.pas"/>
         <DCCReference Include="Controller\uControllerPesquisaProdutos.pas"/>
@@ -167,8 +166,8 @@
         <DCCReference Include="Controller\uControllerPesquisaClientes.pas"/>
         <DCCReference Include="Model\uMODELPesquisaPedidos.pas"/>
         <DCCReference Include="Controller\uControllerPesquisaPedidos.pas"/>
-        <DCCReference Include="DAO\uDAOPedidosProdutos.pas"/>
         <DCCReference Include="Entity\uEntityConexao.pas"/>
+        <DCCReference Include="Controller\uControllerPedidosProdutos.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

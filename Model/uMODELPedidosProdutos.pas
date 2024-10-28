@@ -55,8 +55,8 @@ begin
     AcdsPedidos_Produtos.Fields.FindField('CODIGO_PRODUTO').DisplayLabel := 'Cód. Produto';
     AcdsPedidos_Produtos.Fields.FindField('DESCRICAO_PRODUTO').DisplayLabel := 'Produto';
     AcdsPedidos_Produtos.Fields.FindField('QUANTIDADE').DisplayLabel := 'Qtd';
-    AcdsPedidos_Produtos.Fields.FindField('VALOR_UNITARIO').DisplayLabel := 'Vl. Unitário';
-    AcdsPedidos_Produtos.Fields.FindField('VALOR_TOTAL').DisplayLabel := 'Vl. Total';
+    AcdsPedidos_Produtos.Fields.FindField('VALOR_UNITARIO').DisplayLabel := 'Vl. Unitário R$';
+    AcdsPedidos_Produtos.Fields.FindField('VALOR_TOTAL').DisplayLabel := 'Vl. Total R$';
 
     Result := true;
   except on E: Exception do

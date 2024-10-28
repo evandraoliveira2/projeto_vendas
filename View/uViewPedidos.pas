@@ -14,7 +14,7 @@ uses
   uEntityPedidosProdutos;
 
 type
-  TModo = (tm_Insert, tm_Edit);
+  TModo = (tm_Insert, tm_Edit, tm_None);
 
 type
   TViewPedidos = class(TForm)
@@ -84,6 +84,9 @@ type
       Shift: TShiftState);
     procedure btnEditarPedidoClick(Sender: TObject);
     procedure btnExcluirPedidoClick(Sender: TObject);
+    procedure gridPedidosProdutosDrawColumnCell(Sender: TObject;
+      const Rect: TRect; DataCol: Integer; Column: TColumn;
+      State: TGridDrawState);
   private
     FModoPedidos: TModo;
     FModoPedidosProdutos: TModo;
@@ -100,6 +103,8 @@ type
     procedure AlterarPedidoProduto;
     procedure InserirPedidoProduto;
     procedure PopularControlesPedidosProdutos;
+    procedure PopularListaPedidosProdutos(
+      AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>);
     { Private declarations }
   public
     { Public declarations }
@@ -226,6 +231,7 @@ begin
   ConectarBanco;
   LimparPedidos;
   LimparPedidosProdutos;
+  FModoPedidos := tm_None;
   ControleBotoes(1);
 end;
 
@@ -278,6 +284,7 @@ end;
 
 procedure TViewPedidos.btnCancelarClick(Sender: TObject);
 begin
+  FModoPedidos := tm_None;
   ControleBotoes(1);
 end;
 
@@ -313,8 +320,8 @@ begin
   LimparPedidos;
   LimparPedidosProdutos;
   FModoPedidos := tm_Insert;
-  edtData_Emissao.Date := Date;
   ControleBotoes(2);
+  edtData_Emissao.Date := Date;
   edtCodigo_Cliente.SetFocus;
 end;
 
@@ -427,9 +434,6 @@ begin
   try
     FViewPesquisaPedidos.Codigo := 0;
 
-    if (trim(edtNumero_Pedido.Text) <> '') and (StrToInt(trim(edtNumero_Pedido.Text)) > 0)  then
-      FViewPesquisaPedidos.Codigo := StrToInt(edtNumero_Pedido.Text);
-
     if FViewPesquisaPedidos.ShowModal = mrOk then
     begin
       edtNumero_Pedido.Text := IntToStr(FViewPesquisaPedidos.EntityPedidos.Numero);
@@ -438,7 +442,7 @@ begin
       edtNome_Cliente.Text := FViewPesquisaPedidos.EntityPedidos.Nome_Cliente;
       lblValorTotal.Caption := FormatFloat('########0.00', FViewPesquisaPedidos.EntityPedidos.Valor_Total);
 
-      if not FControllerPedidosProdutos.Select(FViewPesquisaPedidos.EntityPedidos.Numero, FListaPedidosProdutos, MsgError) then
+      if not FControllerPedidos.SelectPedidosProdutos(FViewPesquisaPedidos.EntityPedidos.Numero, FListaPedidosProdutos, MsgError) then
       begin
         MessageDlg(MsgError, mtError, [mbOk], 0);
         Exit;
@@ -448,7 +452,7 @@ begin
 
       if cdsPedidosProdutos.RecordCount > 0 then
       begin
-        if FControllerPedidosProdutos.LimparCds(cdsPedidosProdutos, MsgError) then
+        if not FControllerPedidosProdutos.LimparCds(cdsPedidosProdutos, MsgError) then
         begin
           MessageDlg(MsgError, mtError, [mbOk], 0);
           Exit;
@@ -463,7 +467,7 @@ begin
         Exit;
       end;
 
-      FModoPedidos := tm_Edit;
+      FModoPedidos := tm_None;
       TUtils.AjustarColunas(gridPedidosProdutos);
       ControleBotoes(4);
     end;
@@ -565,7 +569,6 @@ function TViewPedidos.GravarPedidos: boolean;
 var
   FEntityPedidos: TEntityPedidos;
   FListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>;
-  FEntityPedidosProdutos: TEntityPedidosProdutos;
   MsgError: string;
 begin
   Result := true;
@@ -577,10 +580,11 @@ begin
 
   try
     PopularEntityPedidos(FEntityPedidos);
+    PopularListaPedidosProdutos(FListaPedidosProdutos);
 
     if FModoPedidos = tm_Insert then
     begin
-      FEntityPedidos.Numero := FControllerPedidos.Insert(FEntityPedidos, MsgError);
+      FEntityPedidos.Numero := FControllerPedidos.Insert(FEntityPedidos, FListaPedidosProdutos, MsgError);
 
       if FEntityPedidos.Numero = 0 then
       begin
@@ -589,52 +593,31 @@ begin
         Exit;
       end
     end
-    else
+    else if FModoPedidos = tm_Edit then
     begin
       FEntityPedidos.Numero := StrToInt(edtNumero_Pedido.Text);
 
-      if not FControllerPedidos.Update(FEntityPedidos, MsgError) then
+      if not FControllerPedidos.Update(FEntityPedidos, FListaPedidosProdutos, MsgError) then
       begin
         Result := false;
         MessageDlg(MsgError, mtError, [mbOk], 0);
         Exit;
       end
     end;
-
-    cdsPedidosProdutos.First;
-
-    while not cdsPedidosProdutos.Eof do
-    begin
-      FEntityPedidosProdutos := TEntityPedidosProdutos.Create;
-      FEntityPedidosProdutos.Numero_Pedido := FEntityPedidos.Numero;
-      FEntityPedidosProdutos.Codigo_Produto := cdsPedidosProdutos.FieldByName('CODIGO_PRODUTO').AsInteger;
-      FEntityPedidosProdutos.Quantidade := cdsPedidosProdutos.FieldByName('QUANTIDADE').AsInteger;
-      FEntityPedidosProdutos.Valor_Unitario := cdsPedidosProdutos.FieldByName('VALOR_UNITARIO').AsFloat;
-      FEntityPedidosProdutos.Valor_Total := cdsPedidosProdutos.FieldByName('VALOR_TOTAL').AsFloat;
-      FListaPedidosProdutos.Add(FEntityPedidosProdutos);
-
-      cdsPedidosProdutos.Next;
-    end;
-
-    if not FControllerPedidosProdutos.Delete(FEntityPedidos.Numero, MsgError) then
-    begin
-      Result := false;
-      MessageDlg(MsgError, mtError, [mbOk], 0);
-      Exit;
-    end;
-
-    if not FControllerPedidosProdutos.Insert(FListaPedidosProdutos, MsgError) then
-    begin
-      Result := false;
-      MessageDlg(MsgError, mtError, [mbOk], 0);
-      Exit;
-    end;
   finally
+    FModoPedidos := tm_None;
     cdsPedidosProdutos.First;
     cdsPedidosProdutos.EnableControls;
     FreeAndNil(FEntityPedidos);
     FreeAndNil(FListaPedidosProdutos);
   end;
+end;
+
+procedure TViewPedidos.gridPedidosProdutosDrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+begin
+  if (TDBGrid(Sender).DataSource.DataSet.RecordCount > 0) and (Column.Field.DataType = ftFloat) then
+    TDBGrid(Sender).Canvas.TextRect(Rect, Rect.Left + 2, Rect.Top + 2, FormatFloat('###,###,##0.00', Column.Field.AsFloat));
 end;
 
 procedure TViewPedidos.gridPedidosProdutosKeyDown(Sender: TObject;
@@ -705,7 +688,26 @@ begin
       MessageDlg('Erro ao popular EntityPedidosProdutos: ' + E.Message, mtError, [mbOk], 0);
       Exit;
     end;
- end;
+  end;
+end;
+
+procedure TViewPedidos.PopularListaPedidosProdutos(AListaPedidosProdutos: TObjectList<TEntityPedidosProdutos>);
+var
+  FEntityPedidosProdutos: TEntityPedidosProdutos;
+begin
+  cdsPedidosProdutos.First;
+
+  while not cdsPedidosProdutos.Eof do
+  begin
+    FEntityPedidosProdutos := TEntityPedidosProdutos.Create;
+    FEntityPedidosProdutos.Codigo_Produto := cdsPedidosProdutos.FieldByName('CODIGO_PRODUTO').AsInteger;
+    FEntityPedidosProdutos.Quantidade := cdsPedidosProdutos.FieldByName('QUANTIDADE').AsInteger;
+    FEntityPedidosProdutos.Valor_Unitario := cdsPedidosProdutos.FieldByName('VALOR_UNITARIO').AsFloat;
+    FEntityPedidosProdutos.Valor_Total := cdsPedidosProdutos.FieldByName('VALOR_TOTAL').AsFloat;
+    AListaPedidosProdutos.Add(FEntityPedidosProdutos);
+
+    cdsPedidosProdutos.Next;
+  end;
 end;
 
 procedure TViewPedidos.AlterarPedidoProduto;

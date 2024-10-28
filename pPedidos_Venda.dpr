@@ -21,7 +21,6 @@ uses
   uViewPedidos in 'View\uViewPedidos.pas' {ViewPedidos},
   uMODELPedidos in 'Model\uMODELPedidos.pas',
   uMODELPedidosProdutos in 'Model\uMODELPedidosProdutos.pas',
-  uControllerPedidosProdutos in 'Controller\uControllerPedidosProdutos.pas',
   uEntityPedidosProdutos in 'Entity\uEntityPedidosProdutos.pas',
   uMODELPesquisaProdutos in 'Model\uMODELPesquisaProdutos.pas',
   uControllerPesquisaProdutos in 'Controller\uControllerPesquisaProdutos.pas',
@@ -29,8 +28,8 @@ uses
   uControllerPesquisaClientes in 'Controller\uControllerPesquisaClientes.pas',
   uMODELPesquisaPedidos in 'Model\uMODELPesquisaPedidos.pas',
   uControllerPesquisaPedidos in 'Controller\uControllerPesquisaPedidos.pas',
-  uDAOPedidosProdutos in 'DAO\uDAOPedidosProdutos.pas',
-  uEntityConexao in 'Entity\uEntityConexao.pas';
+  uEntityConexao in 'Entity\uEntityConexao.pas',
+  uControllerPedidosProdutos in 'Controller\uControllerPedidosProdutos.pas';
 
 {$R *.res}
 
